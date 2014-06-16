@@ -4,7 +4,7 @@
 #package test
 #import java.lang.*
 #public class HelloWorld { 
-#    void main(){
+#    public static void main(){
 #        int score[ 6 ] = { 76, 82, 90, 86, 79, 62 } ;
 #        int stu_number;
 #        float sum, mean;
@@ -29,8 +29,9 @@
 
 import re
 import sys
+# 调试用的模块
 import pdb
-#token分类
+# token分类
 TOKEN_STYLE = ['KEY_WORD', 'IDENTIFIER', 'DIGIT_CONSTANT','OPERATOR', 'SEPARATOR', 'STRING_CONSTANT']
 
 DETAIL_TOKEN_STYLE = {'abstract':'ABSTRACT', 'assert':'ASSERT', 'boolean':'BOOLEAN', 'break':'BREAK', 
@@ -86,7 +87,7 @@ class Lexer(object):
             index += 1
         return index
 
-    # 打印
+    # 打印，测试用
     def print_log(self, style, value):
         print '(%s, %s)' % (style, value)
 
@@ -170,7 +171,7 @@ class Lexer(object):
                     i = self.skip_blank(i + 2)
                 # 其他
                 else:
-                    self.print_log( '运算符', content[ i ] )
+                    #self.print_log( 'operators', content[ i ] )
                     self.tokens.append(Token(3, content[i]))
                     i = self.skip_blank(i + 1)
 
@@ -306,6 +307,7 @@ class Parser(object):
             elif sentence_pattern == 'RB_BRACKET':
                 break
             else:
+                #pdb.set_trace()
                 print 'block error!'
                 exit()
 
@@ -351,7 +353,7 @@ class Parser(object):
             #如果是修饰词（public，private。。。）
             if self.tokens[self.index].value in keywords[3]:
                 return_type = SyntaxTreeNode('Adjective')
-                class_statement_tree.add_child_node(return_tree)
+                class_statement_tree.add_child_node(return_type)
                 class_statement_tree.add_child_node(
                     SyntaxTreeNode(self.tokens[self.index].value,'ADJECTIVE_TYPE',{'type': self.tokens[self.index].value}))
                 self.index += 1
@@ -387,10 +389,18 @@ class Parser(object):
         # 函数声明语句什么时候结束
         flag = True
         while flag and self.index < len(self.tokens):
+            #pdb.set_trace()
+            # 如果是修饰的public,private
+            if self.tokens[self.index].value in keywords[3]:
+                return_type = SyntaxTreeNode('Adjective')
+                func_statement_tree.add_child_node(return_type)
+                func_statement_tree.add_child_node(
+                    SyntaxTreeNode(self.tokens[self.index].value, 'ADJECTIVE_TYPE', {'type': self.tokens[self.index].value}))
+                self.index += 1
             # 如果是函数返回类型
             if self.tokens[self.index].value in keywords[0]:
                 return_type = SyntaxTreeNode('Type')
-                func_statement_tree.add_child_node(return_type)
+                func_statement_tree.add_child_node(return_type,func_statement_tree.root)
                 func_statement_tree.add_child_node(
                     SyntaxTreeNode(self.tokens[self.index].value, 'FIELD_TYPE', {'type': self.tokens[self.index].value}))
                 self.index += 1
@@ -445,11 +455,18 @@ class Parser(object):
         # 暂时用来保存当前声明语句的类型，以便于识别多个变量的声明
         tmp_variable_type = None
         while self.tokens[self.index].type != 'SEMICOLON':
+            # 变量属性
+            if self.tokens[self.index].value in keywords[3]:
+                tmp_variable_type = self.tokens[self.index].value
+                variable_type = SyntaxTreeNode('Adjective')
+                statement_tree.add_child_node(variable_type)
+                statement_tree.add_child_node(
+                    SyntaxTreeNode(self.tokens[self.index].value, 'ADJECTIVE_TYPE', {'type': self.tokens[self.index].value}),statement_tree.root)
             # 变量类型
-            if self.tokens[self.index].value in keywords[0]:
+            elif self.tokens[self.index].value in keywords[0]:
                 tmp_variable_type = self.tokens[self.index].value
                 variable_type = SyntaxTreeNode('Type')
-                statement_tree.add_child_node(variable_type)
+                statement_tree.add_child_node(variable_type,statement_tree.root)
                 # extra_info
                 statement_tree.add_child_node(
                     SyntaxTreeNode(self.tokens[self.index].value, 'FIELD_TYPE', {'type': self.tokens[self.index].value}))
@@ -808,9 +825,10 @@ class Parser(object):
     # 根据一个句型的句首判断句型
     def _judge_sentence_pattern(self):
         print '_judge_sentence_pattern'
-        #pdb.set_trace()
+       
         token_value = self.tokens[self.index].value
-        token_type = self.tokens[self.index].type
+        token_type = self.tokens[self.index].type 
+        #pdb.set_trace()
         print token_value,'aa',token_type        
         # package句型
         if token_type == 'PACKAGE' and self.tokens[self.index+1].type == 'IDENTIFIER':
@@ -851,6 +869,30 @@ class Parser(object):
         elif token_type == 'RB_BRACKET':
             self.index += 1
             return 'RB_BRACKET'
+
+        # 2014.6.17.00:30 这是对public等修饰词判断的
+        
+        elif token_value in keywords[3]:
+            #pdb.set_trace()
+            temp_index = self.index+1
+            index_1_token_value = self.tokens[temp_index].value
+            # 如果继续为public, static 之类的，就忽略掉这个关键字，继续往下看，相当于指针移动
+            if index_1_token_value in keywords[3]:
+                temp_index += 1
+            if self.tokens[temp_index].type == 'CLASS':
+                return 'ClASS_STATEMENT'
+            elif self.tokens[temp_index].value in keywords[0] and self.tokens[temp_index + 1].type == 'IDENTIFIER':
+                index_2_token_type = self.tokens[temp_index + 2].type
+                if index_2_token_type == 'LL_BRACKET':
+                    return 'FUNCTION_STATEMENT'
+                elif index_2_token_type == 'SEMICOLON' or index_2_token_type == 'LM_BRACKET' or index_2_token_type == 'COMMA':
+                    return 'STATEMENT'
+                else:
+                    return 'ERROR'
+
+
+
+
         else:
             return 'ERROR'
 
@@ -859,6 +901,7 @@ class Parser(object):
         # 根节点
         self.tree.current = self.tree.root = SyntaxTreeNode('Sentence')
         while self.index < len(self.tokens):
+
             # 句型
             sentence_pattern = self._judge_sentence_pattern()
             print sentence_pattern

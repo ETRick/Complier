@@ -1,11 +1,12 @@
 package test
 import java.lang.*
 public class HelloWorld { 
-	void main(){
+    public static void main(){
+        private int i;
 		int score[ 6 ] = { 76, 82, 90, 86, 79, 62 } ;
 		int stu_number;
 		float sum, mean;
-		int i;
+		
 		sum = 0;
 		for( i = 0 ; i < 6 ; i++ ){
         	sum = sum + score[i] * credit[i] ;
