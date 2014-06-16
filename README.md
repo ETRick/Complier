@@ -7,6 +7,8 @@
 
 - 2014.6.17完成词法分析
 
+- 2014.6.17.2:30添加文件操作，实现写入文件功能。在当前目录生成lexer.txt和parser.txt文件
+
 - 此项目参考`shiyanhui`的[Compiler for C language with python](https://github.com/shiyanhui/Compiler)
 
 ###说明
