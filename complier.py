@@ -8,7 +8,7 @@
 #        int score[ 6 ] = { 76, 82, 90, 86, 79, 62 } ;
 #        int stu_number;
 #        float sum, mean;
-#        int i;
+#        private int i;
 #        sum = 0;
 #        for( i = 0 ; i < 6 ; i++ ){
 #            sum = sum + score[i] * credit[i] ;
@@ -31,6 +31,7 @@ import re
 import sys
 # 调试用的模块
 import pdb
+
 # token分类
 TOKEN_STYLE = ['KEY_WORD', 'IDENTIFIER', 'DIGIT_CONSTANT','OPERATOR', 'SEPARATOR', 'STRING_CONSTANT']
 
@@ -313,7 +314,7 @@ class Parser(object):
 
     # package句型
     def _package(self, father=None):
-        print '_package'
+        #print '_package'
         if not father:
             father = self.tree.root
         package_tree = SyntaxTree()
@@ -326,7 +327,7 @@ class Parser(object):
         self.index += 2
     # import句型
     def _import(self, father=None):
-        print '_import'
+        #print '_import'
         if not father:
             father = self.tree.root
         import_tree = SyntaxTree()
@@ -340,7 +341,7 @@ class Parser(object):
        
     # class句型
     def _class_statement(self, father=None):
-        print '_class_statement'
+        #print '_class_statement'
         #pdb.set_trace()
         if not father:
             father = self.tree.root
@@ -379,7 +380,7 @@ class Parser(object):
     def _function_statement(self, father=None):
         count = 0
         #pdb.set_trace()
-        print '_function_statement'
+        #print '_function_statement'
         if not father:
             father = self.tree.root
         func_statement_tree = SyntaxTree()
@@ -445,7 +446,7 @@ class Parser(object):
 
     # 声明语句
     def _statement(self, father=None):
-        print '_statement'
+        #print '_statement'
         if not father:
             father = self.tree.root
         statement_tree = SyntaxTree()
@@ -516,7 +517,7 @@ class Parser(object):
 
     # 赋值语句-->TODO
     def _assignment(self, father=None):
-        print '_assignment'
+        #print '_assignment'
         if not father:
             father = self.tree.root
         assign_tree = SyntaxTree()
@@ -535,7 +536,7 @@ class Parser(object):
 
     # while语句，没处理do-while的情况，只处理了while
     def _while(self, father=None):
-        print '_while'
+        #print '_while'
         while_tree = SyntaxTree()
         while_tree.current = while_tree.root = SyntaxTreeNode(
             'Control', 'WhileControl')
@@ -553,7 +554,7 @@ class Parser(object):
 
     # for语句
     def _for(self, father=None):
-        print '_for'
+        #print '_for'
         for_tree = SyntaxTree()
         for_tree.current = for_tree.root = SyntaxTreeNode(
             'Control', 'ForControl')
@@ -590,7 +591,7 @@ class Parser(object):
 
     # if语句
     def _if_else(self, father=None):
-        print '_if_else'
+        #print '_if_else'
         if_else_tree = SyntaxTree()
         if_else_tree.current = if_else_tree.root = SyntaxTreeNode(
             'Control', 'IfElseControl')
@@ -631,7 +632,7 @@ class Parser(object):
                 self._block(else_tree)
 
     def _control(self, father=None):
-        print '_control'
+        #print '_control'
         token_type = self.tokens[self.index].type
         if token_type == 'WHILE' or token_type == 'DO':
             self._while(father)
@@ -767,7 +768,7 @@ class Parser(object):
     # 函数调用
     def _function_call(self, father=None):
         #pdb.set_trace()
-        print '_function_call'
+        #print '_function_call'
         if not father:
             father = self.tree.root
         func_call_tree = SyntaxTree()
@@ -806,7 +807,7 @@ class Parser(object):
 
     # return语句 -->TODO
     def _return(self, father=None):
-        print '_return'
+        #print '_return'
         if not father:
             father = self.tree.root
         return_tree = SyntaxTree()
@@ -824,12 +825,12 @@ class Parser(object):
 
     # 根据一个句型的句首判断句型
     def _judge_sentence_pattern(self):
-        print '_judge_sentence_pattern'
+        #print '_judge_sentence_pattern'
        
         token_value = self.tokens[self.index].value
         token_type = self.tokens[self.index].type 
         #pdb.set_trace()
-        print token_value,'aa',token_type        
+        #print token_value,'aa',token_type        
         # package句型
         if token_type == 'PACKAGE' and self.tokens[self.index+1].type == 'IDENTIFIER':
             return 'PACKAGE'
@@ -904,7 +905,7 @@ class Parser(object):
 
             # 句型
             sentence_pattern = self._judge_sentence_pattern()
-            print sentence_pattern
+            #print sentence_pattern
             #pdb.set_trace() 
             # 如果是package句型
             if sentence_pattern == 'PACKAGE':
@@ -933,14 +934,26 @@ class Parser(object):
     def display(self, node):
         if not node:
             return
-        print '( self: %s %s, father: %s, left: %s, right: %s )' % (node.value, node.type, node.father.value if node.father else None, node.left.value if node.left else None, node.right.value if node.right else None)
+        output = open('parser.txt','a')
+        output.write( '( self: %s %s, father: %s, left: %s, right: %s )\r\n' % (node.value, node.type, node.father.value if node.father else None, node.left.value if node.left else None, node.right.value if node.right else None))
+        output.close()
         child = node.first_son
         while child:
             self.display(child)
             child = child.right
+            
+
+
+
+
     
-
-
+def lexer():
+    lexer = Lexer()
+    lexer.main()
+    output = open('lexer.txt', 'w')
+    for token in lexer.tokens:
+        output.write('(%s, %s) \r\n' % (token.type, token.value))
+    output.close()
 
 def parser():
     parser = Parser()
@@ -951,9 +964,7 @@ if __name__ == '__main__':
     file_name = sys.argv[1]
     source_file = open(file_name)
     content = source_file.read()
-    #lexer = Lexer()
-    #lexer.main()
-    #for token in lexer.tokens:
-    #    print '(%s, %s)' % (token.type, token.value)
+    lexer()
     parser()
+    print 'Completed!'
 
