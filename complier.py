@@ -1,32 +1,43 @@
 # -*- coding: utf-8 -*-
+__author__ = 'Rick'
 
-#实现对下面不规范的java代码的词法和语法分析
-#package test
-#import java.lang.*
-#public class HelloWorld { 
-#    public static void main(){
-#        int score[ 6 ] = { 76, 82, 90, 86, 79, 62 } ;
-#        int stu_number;
-#        float sum, mean;
-#        private int i;
-#        sum = 0;
-#        for( i = 0 ; i < 6 ; i++ ){
-#            sum = sum + score[i] * credit[i] ;
-#            temp = temp + credit[i] ;
-#        }
-#        if( mean >= 60 ){
-#            mean = mean - 60 ;
-#            
-#        }
-#        else{
-#            mean = 60 - mean ;          
-#            
-#        }
-#        
-#        System.out.println("HelloWorld!"); 
-#    } 
-#}
+'''
 
+实现对下面不规范的java代码的词法和语法分析:
+
+
+package test
+import java.lang.*
+public class HelloWorld { 
+    public static void main(){
+        int score[ 6 ] = { 76, 82, 90, 86, 79, 62 } ;
+        int stu_number;
+        float sum, mean;
+        private int i;
+        sum = 0;
+        for( i = 0 ; i < 6 ; i++ ){
+            sum = sum + score[i] * credit[i] ;
+            temp = temp + credit[i] ;
+        }
+        if( mean >= 60 ){
+            mean = mean - 60 ;
+            
+        }
+        else{
+            mean = 60 - mean ;          
+            
+        }
+        
+        System.out.println("HelloWorld!"); 
+    } 
+}
+
+
+说明：
+此此程序是邵志恒（Rick）修改shiyanhui（https://github.com/shiyanhui/Compiler）的程序得到的。
+保留词法和语法部分，修改部分代码，添加部分函数实现对java代码的词法和语法分析(原程序是用python是实现对C的编译，
+生成汇编语言)
+'''
 import re
 import sys
 # 调试用的模块
@@ -63,12 +74,19 @@ file_name = None
 # 文件内容
 content = None
 
+
+
+
+
 class Token(object):
     '''记录分析出来的单词'''
 
     def __init__(self, type_index, value):
         self.type = DETAIL_TOKEN_STYLE[value] if type_index == 0 or type_index == 3 or type_index == 4 else TOKEN_STYLE[type_index]
         self.value = value
+
+
+
 
 
 class Lexer(object):
@@ -180,17 +198,6 @@ class Lexer(object):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 class SyntaxTreeNode(object):
     '''语法树节点'''
 
@@ -217,6 +224,7 @@ class SyntaxTreeNode(object):
 
     def set_extra_info(self, extra_info):
         self.extra_info = extra_info
+
 
 
 
@@ -259,6 +267,7 @@ class SyntaxTree(object):
             left_left.right = right
         if right_right:
             right_right.left = left
+
 
 
 
@@ -311,7 +320,9 @@ class Parser(object):
                 #pdb.set_trace()
                 print 'block error!'
                 exit()
-
+               
+                
+             
     # package句型
     def _package(self, father=None):
         #print '_package'
@@ -325,6 +336,9 @@ class Parser(object):
         package_tree.add_child_node(
                 SyntaxTreeNode(self.tokens[self.index+1].value), package_tree .root)
         self.index += 2
+        
+        
+        
     # import句型
     def _import(self, father=None):
         #print '_import'
@@ -338,6 +352,8 @@ class Parser(object):
         import_tree.add_child_node(
                 SyntaxTreeNode(self.tokens[self.index+1].value), import_tree .root)
         self.index += 2
+       
+       
        
     # class句型
     def _class_statement(self, father=None):
@@ -514,6 +530,8 @@ class Parser(object):
                 break
             self.index += 1
         self.index += 1
+        
+       
 
     # 赋值语句-->TODO
     def _assignment(self, father=None):
@@ -534,6 +552,8 @@ class Parser(object):
                 self._expression(assign_tree.root)
         self.index += 1
 
+
+
     # while语句，没处理do-while的情况，只处理了while
     def _while(self, father=None):
         #print '_while'
@@ -551,6 +571,8 @@ class Parser(object):
 
             if self.tokens[self.index].type == 'LB_BRACKET':
                 self._block(while_tree)
+
+
 
     # for语句
     def _for(self, father=None):
@@ -588,6 +610,8 @@ class Parser(object):
         current_node = for_tree.root.first_son.right.right
         next_node = current_node.right
         for_tree.switch(current_node, next_node)
+
+
 
     # if语句
     def _if_else(self, father=None):
@@ -631,6 +655,8 @@ class Parser(object):
             if self.tokens[self.index].type == 'LB_BRACKET':
                 self._block(else_tree)
 
+
+
     def _control(self, father=None):
         #print '_control'
         token_type = self.tokens[self.index].type
@@ -643,6 +669,8 @@ class Parser(object):
         else:
             print 'error: control style not supported!'
             exit()
+
+
 
     # 表达式-->TODO
     def _expression(self, father=None, index=None):
@@ -765,6 +793,8 @@ class Parser(object):
                     exit()
         self.tree.add_child_node(operand_stack[0].root, father)
 
+
+
     # 函数调用
     def _function_call(self, father=None):
         #pdb.set_trace()
@@ -805,6 +835,8 @@ class Parser(object):
             self.index += 1
         self.index += 1
 
+
+
     # return语句 -->TODO
     def _return(self, father=None):
         #print '_return'
@@ -822,6 +854,8 @@ class Parser(object):
             else:
                 self._expression(return_tree.root)
         self.index += 1
+
+
 
     # 根据一个句型的句首判断句型
     def _judge_sentence_pattern(self):
@@ -890,12 +924,10 @@ class Parser(object):
                     return 'STATEMENT'
                 else:
                     return 'ERROR'
-
-
-
-
         else:
             return 'ERROR'
+
+
 
     # 主程序
     def main(self):
@@ -930,6 +962,8 @@ class Parser(object):
                 print 'main error!'
                 exit()
 
+
+
     # DFS遍历语法树
     def display(self, node):
         if not node:
@@ -941,12 +975,11 @@ class Parser(object):
         while child:
             self.display(child)
             child = child.right
-            
-
-
-
-
-    
+ 
+ 
+ 
+ 
+#词法辅助函数,结果输出到当前目录的文件下
 def lexer():
     lexer = Lexer()
     lexer.main()
@@ -955,10 +988,16 @@ def lexer():
         output.write('(%s, %s) \r\n' % (token.type, token.value))
     output.close()
 
+
+
+#语法辅助函数，结果输出到当前目录的文件下
 def parser():
     parser = Parser()
     parser.main()
     parser.display(parser.tree.root)
+
+
+
 
 if __name__ == '__main__':
     file_name = sys.argv[1]
